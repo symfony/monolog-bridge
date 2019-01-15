@@ -155,6 +155,11 @@ class ConsoleFormatter implements FormatterInterface
         return $a;
     }
 
+    private function setFormatPattern($formatPattern)
+    {
+        $this->options['format'] = $formatPattern;
+    }
+
     private function replacePlaceHolder(array $record)
     {
         $message = $record['message'];
