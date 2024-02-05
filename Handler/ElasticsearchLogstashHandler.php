@@ -41,20 +41,20 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
  *
  * @author Grégoire Pineau <lyrixx@lyrixx.info>
  */
-final class ElasticsearchLogstashHandler extends AbstractHandler
+class ElasticsearchLogstashHandler extends AbstractHandler
 {
     use FormattableHandlerTrait;
     use ProcessableHandlerTrait;
 
-    private string $endpoint;
-    private string $index;
-    private HttpClientInterface $client;
-    private string $elasticsearchVersion;
+    protected string $endpoint;
+    protected string $index;
+    protected HttpClientInterface $client;
+    protected string $elasticsearchVersion;
 
     /**
      * @var \SplObjectStorage<ResponseInterface, null>
      */
-    private \SplObjectStorage $responses;
+    protected \SplObjectStorage $responses;
 
     public function __construct(string $endpoint = 'http://127.0.0.1:9200', string $index = 'monolog', ?HttpClientInterface $client = null, string|int|Level $level = Level::Debug, bool $bubble = true, string $elasticsearchVersion = '1.0.0')
     {
@@ -95,24 +95,10 @@ final class ElasticsearchLogstashHandler extends AbstractHandler
         return new LogstashFormatter('application');
     }
 
-    private function sendToElasticsearch(array $records): void
+    protected function sendToElasticsearch(array $records): void
     {
         $formatter = $this->getFormatter();
-
-        if (version_compare($this->elasticsearchVersion, '7', '>=')) {
-            $headers = json_encode([
-                'index' => [
-                    '_index' => $this->index,
-                ],
-            ]);
-        } else {
-            $headers = json_encode([
-                'index' => [
-                    '_index' => $this->index,
-                    '_type' => '_doc',
-                ],
-            ]);
-        }
+        $headers = $this->getHeaders();
 
         $body = '';
         foreach ($records as $record) {
@@ -138,6 +124,24 @@ final class ElasticsearchLogstashHandler extends AbstractHandler
         $this->wait(false);
     }
 
+    protected function getHeaders(): string|false
+    {
+        if (version_compare($this->elasticsearchVersion, '7', '>=')) {
+            return json_encode([
+                'index' => [
+                    '_index' => $this->index,
+                ],
+            ]);
+        }
+
+        return json_encode([
+            'index' => [
+                '_index' => $this->index,
+                '_type' => '_doc',
+            ],
+        ]);
+    }
+
     public function __sleep(): array
     {
         throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
@@ -153,7 +157,7 @@ final class ElasticsearchLogstashHandler extends AbstractHandler
         $this->wait(true);
     }
 
-    private function wait(bool $blocking): void
+    protected function wait(bool $blocking): void
     {
         foreach ($this->client->stream($this->responses, $blocking ? null : 0.0) as $response => $chunk) {
             try {
