@@ -123,8 +123,8 @@ class ConsoleFormatter implements FormatterInterface
             '%datetime%' => $record['datetime'] instanceof \DateTimeInterface
                 ? $record['datetime']->format($this->options['date_format'])
                 : $record['datetime'],
-            '%start_tag%' => sprintf('<%s>', self::LEVEL_COLOR_MAP[$record['level']]),
-            '%level_name%' => sprintf($this->options['level_name_format'], $record['level_name']),
+            '%start_tag%' => \sprintf('<%s>', self::LEVEL_COLOR_MAP[$record['level']]),
+            '%level_name%' => \sprintf($this->options['level_name_format'], $record['level_name']),
             '%end_tag%' => '</>',
             '%channel%' => $record['channel'],
             '%message%' => $this->replacePlaceHolder($record)['message'],
@@ -177,7 +177,7 @@ class ConsoleFormatter implements FormatterInterface
             // Remove quotes added by the dumper around string.
             $v = trim($this->dumpData($v, false), '"');
             $v = OutputFormatter::escape($v);
-            $replacements['{'.$k.'}'] = sprintf('<comment>%s</>', $v);
+            $replacements['{'.$k.'}'] = \sprintf('<comment>%s</>', $v);
         }
 
         $record['message'] = strtr($message, $replacements);
