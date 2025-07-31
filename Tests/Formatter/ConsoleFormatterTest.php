@@ -13,15 +13,14 @@ namespace Symfony\Bridge\Monolog\Tests\Formatter;
 
 use Monolog\Logger;
 use Monolog\LogRecord;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
 use Symfony\Bridge\Monolog\Tests\RecordFactory;
 
 class ConsoleFormatterTest extends TestCase
 {
-    /**
-     * @dataProvider providerFormatTests
-     */
+    #[DataProvider('providerFormatTests')]
     public function testFormat(array|LogRecord $record, $expectedMessage)
     {
         $formatter = new ConsoleFormatter();

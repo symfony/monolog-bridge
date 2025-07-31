@@ -13,6 +13,7 @@ namespace Symfony\Bridge\Monolog\Tests\Handler;
 
 use Monolog\Level;
 use Monolog\Logger;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
 use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
@@ -46,9 +47,7 @@ class ConsoleHandlerTest extends TestCase
         $this->assertFalse($handler->isHandling(RecordFactory::create()), '->isHandling returns false when no output is set');
     }
 
-    /**
-     * @dataProvider provideVerbosityMappingTests
-     */
+    #[DataProvider('provideVerbosityMappingTests')]
     public function testVerbosityMapping($verbosity, $level, $isHandling, array $map = [])
     {
         $output = $this->createMock(OutputInterface::class);
