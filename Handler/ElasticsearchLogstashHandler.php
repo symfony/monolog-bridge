@@ -133,7 +133,7 @@ final class ElasticsearchLogstashHandler extends AbstractHandler
             ],
         ]);
 
-        $this->responses->attach($response);
+        $this->responses[$response] = null;
 
         $this->wait(false);
     }
@@ -164,10 +164,10 @@ final class ElasticsearchLogstashHandler extends AbstractHandler
                     continue;
                 }
                 if ($chunk->isLast()) {
-                    $this->responses->detach($response);
+                    unset($this->responses[$response]);
                 }
             } catch (ExceptionInterface $e) {
-                $this->responses->detach($response);
+                unset($this->responses[$response]);
                 error_log(\sprintf("Could not push logs to Elasticsearch:\n%s", (string) $e));
             }
         }
