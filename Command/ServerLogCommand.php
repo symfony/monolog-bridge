@@ -68,7 +68,7 @@ class ServerLogCommand extends Command
 
                   <info>php %command.full_name%</info>
 
-                To filter the log messages using any ExpressionLanguage compatible expression, use the <comment>--filter</> option:
+                To filter the log messages using any ExpressionLanguage compatible expression, use the <info>--filter</> option:
 
                 <info>php %command.full_name% --filter="level > 200 or channel in ['app', 'doctrine']"</info>
                 EOF
