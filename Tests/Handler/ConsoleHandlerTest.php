@@ -100,9 +100,7 @@ class ConsoleHandlerTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideHandleOrBubbleSilentTests
-     */
+    #[DataProvider('provideHandleOrBubbleSilentTests')]
     public function testHandleOrBubbleSilent(int $verbosity, Level $level, bool $isHandling, bool $isWriting, array $map = [])
     {
         $output = $this->createMock(OutputInterface::class);
