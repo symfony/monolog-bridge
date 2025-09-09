@@ -167,6 +167,8 @@ final class ConsoleHandler extends AbstractProcessingHandler implements EventSub
         $verbosity = $this->output->getVerbosity();
         if (isset($this->verbosityLevelMap[$verbosity])) {
             $this->setLevel($this->verbosityLevelMap[$verbosity]);
+        } elseif (OutputInterface::VERBOSITY_SILENT === $verbosity) {
+            return false;
         } else {
             $this->setLevel(Level::Debug);
         }
