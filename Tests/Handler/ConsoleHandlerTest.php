@@ -100,6 +100,58 @@ class ConsoleHandlerTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider provideHandleOrBubbleSilentTests
+     */
+    public function testHandleOrBubbleSilent(int $verbosity, Level $level, bool $isHandling, bool $isWriting, array $map = [])
+    {
+        $output = $this->createMock(OutputInterface::class);
+        $output
+            ->expects($this->atLeastOnce())
+            ->method('getVerbosity')
+            ->willReturn($verbosity)
+        ;
+        $handler = new ConsoleHandler($output, false, $map);
+        $this->assertSame($isHandling, $handler->isHandling(RecordFactory::create($level)), '->isHandling returns correct value depending on console verbosity and log level');
+
+        // check that the handler actually outputs the record if it handles it at verbosity above SILENT
+        $levelName = Logger::getLevelName($level);
+        $levelName = \sprintf('%-9s', $levelName);
+
+        $realOutput = $this->getMockBuilder(Output::class)->onlyMethods(['doWrite'])->getMock();
+        $realOutput->setVerbosity($verbosity);
+        $log = "16:21:54 $levelName [app] My info message\n";
+        $realOutput
+            ->expects($isWriting ? $this->once() : $this->never())
+            ->method('doWrite')
+            ->with($log, false);
+        $handler = new ConsoleHandler($realOutput, false, $map);
+
+        $infoRecord = RecordFactory::create($level, 'My info message', 'app', datetime: new \DateTimeImmutable('2013-05-29 16:21:54'));
+        $this->assertSame($isHandling, $handler->handle($infoRecord), 'The handler bubbled correctly when it did not output the message.');
+    }
+
+    public static function provideHandleOrBubbleSilentTests(): array
+    {
+        // The VERBOSITY_SILENT const is not defined for Console below 7.2, but in that case, the code behaves as before
+        if (!\defined('\Symfony\Component\Console\Output\OutputInterface::VERBOSITY_SILENT')) {
+            return [
+                [OutputInterface::VERBOSITY_NORMAL, Level::Warning, true, true],
+                [OutputInterface::VERBOSITY_NORMAL, Level::Info, false, false],
+            ];
+        }
+
+        return [
+            [OutputInterface::VERBOSITY_SILENT, Level::Warning, false, false],
+            [OutputInterface::VERBOSITY_NORMAL, Level::Warning, true, true],
+            [OutputInterface::VERBOSITY_NORMAL, Level::Info, false, false],
+            [OutputInterface::VERBOSITY_SILENT, Level::Warning, true, false, [OutputInterface::VERBOSITY_SILENT => Level::Warning]],
+            [OutputInterface::VERBOSITY_SILENT, Level::Warning, false, false, [OutputInterface::VERBOSITY_SILENT => Level::Error]],
+            [OutputInterface::VERBOSITY_SILENT, Level::Emergency, false, false],
+            [OutputInterface::VERBOSITY_SILENT, Level::Emergency, true, false, [OutputInterface::VERBOSITY_SILENT => Level::Emergency]],
+        ];
+    }
+
     public function testVerbosityChanged()
     {
         $output = $this->createMock(OutputInterface::class);
