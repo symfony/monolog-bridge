@@ -115,7 +115,7 @@ class FirePHPHandlerTest extends TestCase
         $request->headers->remove('User-Agent');
 
         $error = null;
-        set_error_handler(function ($type, $message) use (&$error) { $error = $message; }, \E_DEPRECATED);
+        set_error_handler(static function ($type, $message) use (&$error) { $error = $message; }, \E_DEPRECATED);
 
         $this->dispatchResponseEvent($handler, $request);
         restore_error_handler();

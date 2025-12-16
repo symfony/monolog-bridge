@@ -201,19 +201,19 @@ class ConsoleHandlerTest extends TestCase
         $logger->pushHandler($handler);
 
         $dispatcher = new EventDispatcher();
-        $dispatcher->addListener(ConsoleEvents::COMMAND, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::COMMAND, static function () use ($logger) {
             $logger->info('Before command message.');
         });
-        $dispatcher->addListener(ConsoleEvents::TERMINATE, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::TERMINATE, static function () use ($logger) {
             $logger->info('Before terminate message.');
         });
 
         $dispatcher->addSubscriber($handler);
 
-        $dispatcher->addListener(ConsoleEvents::COMMAND, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::COMMAND, static function () use ($logger) {
             $logger->info('After command message.');
         });
-        $dispatcher->addListener(ConsoleEvents::TERMINATE, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::TERMINATE, static function () use ($logger) {
             $logger->info('After terminate message.');
         });
 
