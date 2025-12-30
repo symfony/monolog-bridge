@@ -103,9 +103,16 @@ class FirePHPHandlerTest extends TestCase
             return new FirePHPHandler();
         }
 
-        $handler = $this->getMockBuilder(FirePHPHandler::class)
-            ->onlyMethods(['isWebRequest'])
-            ->getMock();
+        if (method_exists($this, 'getStubBuilder')) {
+            $handler = self::getStubBuilder(FirePHPHandler::class)
+                ->onlyMethods(['isWebRequest'])
+                ->getStub();
+        } else {
+            $handler = $this->getMockBuilder(FirePHPHandler::class)
+                ->onlyMethods(['isWebRequest'])
+                ->getMock();
+        }
+
         // Disable web request detection
         $handler->method('isWebRequest')->willReturn(true);
 
