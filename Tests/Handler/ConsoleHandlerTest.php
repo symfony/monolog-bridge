@@ -22,7 +22,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleCommandEvent;
 use Symfony\Component\Console\Event\ConsoleTerminateEvent;
-use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -217,12 +217,12 @@ class ConsoleHandlerTest extends TestCase
             $logger->info('After terminate message.');
         });
 
-        $event = new ConsoleCommandEvent(new Command('foo'), $this->createMock(InputInterface::class), $output);
+        $event = new ConsoleCommandEvent(new Command('foo'), new ArrayInput([]), $output);
         $dispatcher->dispatch($event, ConsoleEvents::COMMAND);
         $this->assertStringContainsString('Before command message.', $out = $output->fetch());
         $this->assertStringContainsString('After command message.', $out);
 
-        $event = new ConsoleTerminateEvent(new Command('foo'), $this->createMock(InputInterface::class), $output, 0);
+        $event = new ConsoleTerminateEvent(new Command('foo'), new ArrayInput([]), $output, 0);
         $dispatcher->dispatch($event, ConsoleEvents::TERMINATE);
         $this->assertStringContainsString('Before terminate message.', $out = $output->fetch());
         $this->assertStringContainsString('After terminate message.', $out);
