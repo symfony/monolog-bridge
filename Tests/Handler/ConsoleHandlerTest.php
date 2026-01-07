@@ -231,10 +231,10 @@ class ConsoleHandlerTest extends TestCase
 
     public function testInteractiveOnly()
     {
-        $output = $this->createMock(OutputInterface::class);
+        $output = $this->createStub(OutputInterface::class);
 
         $message = RecordFactory::create(Level::Info, 'My info message');
-        $interactiveInput = $this->createMock(InputInterface::class);
+        $interactiveInput = $this->createStub(InputInterface::class);
         $interactiveInput
             ->method('isInteractive')
             ->willReturn(true);
@@ -244,7 +244,7 @@ class ConsoleHandlerTest extends TestCase
         self::assertTrue($handler->isHandling($message), '->isHandling returns true when input is interactive');
         self::assertFalse($handler->getBubble(), '->getBubble returns false when input is interactive and interactiveOnly is true');
 
-        $nonInteractiveInput = $this->createMock(InputInterface::class);
+        $nonInteractiveInput = $this->createStub(InputInterface::class);
         $nonInteractiveInput
             ->method('isInteractive')
             ->willReturn(false);
