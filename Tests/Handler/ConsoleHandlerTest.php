@@ -173,7 +173,6 @@ class ConsoleHandlerTest extends TestCase
     {
         $output = $this->createMock(OutputInterface::class);
         $output
-            ->expects($this->any())
             ->method('getVerbosity')
             ->willReturn(OutputInterface::VERBOSITY_DEBUG)
         ;
