@@ -162,19 +162,19 @@ class ConsoleHandlerTest extends TestCase
         $logger->pushHandler($handler);
 
         $dispatcher = new EventDispatcher();
-        $dispatcher->addListener(ConsoleEvents::COMMAND, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::COMMAND, static function () use ($logger) {
             $logger->info('Before command message.');
         });
-        $dispatcher->addListener(ConsoleEvents::TERMINATE, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::TERMINATE, static function () use ($logger) {
             $logger->info('Before terminate message.');
         });
 
         $dispatcher->addSubscriber($handler);
 
-        $dispatcher->addListener(ConsoleEvents::COMMAND, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::COMMAND, static function () use ($logger) {
             $logger->info('After command message.');
         });
-        $dispatcher->addListener(ConsoleEvents::TERMINATE, function () use ($logger) {
+        $dispatcher->addListener(ConsoleEvents::TERMINATE, static function () use ($logger) {
             $logger->info('After terminate message.');
         });
 
@@ -187,5 +187,37 @@ class ConsoleHandlerTest extends TestCase
         $dispatcher->dispatch($event, ConsoleEvents::TERMINATE);
         $this->assertStringContainsString('Before terminate message.', $out = $output->fetch());
         $this->assertStringContainsString('After terminate message.', $out);
+    }
+
+    public function testNestedCommandsDoNotCloseHandler()
+    {
+        $output = new BufferedOutput();
+        $output->setVerbosity(OutputInterface::VERBOSITY_DEBUG);
+
+        $handler = new ConsoleHandler(null, false);
+
+        $logger = new Logger('app');
+        $logger->pushHandler($handler);
+
+        $dispatcher = new EventDispatcher();
+        $dispatcher->addSubscriber($handler);
+
+        $parentInput = new ArrayInput([]);
+        $subInput = new ArrayInput([]);
+
+        $dispatcher->dispatch(new ConsoleCommandEvent(new Command('messenger:consume'), $parentInput, $output), ConsoleEvents::COMMAND);
+        $logger->info('log from parent');
+        $this->assertStringContainsString('log from parent', $output->fetch());
+
+        $subOutput = new BufferedOutput();
+        $dispatcher->dispatch(new ConsoleCommandEvent(new Command('nested:task'), $subInput, $subOutput), ConsoleEvents::COMMAND);
+        $dispatcher->dispatch(new ConsoleTerminateEvent(new Command('nested:task'), $subInput, $subOutput, Command::SUCCESS), ConsoleEvents::TERMINATE);
+
+        $logger->info('log after sub-command');
+        $this->assertStringContainsString('log after sub-command', $output->fetch(), 'Handler must still be active after nested command terminates');
+
+        // Parent command terminates: handler must be closed now
+        $dispatcher->dispatch(new ConsoleTerminateEvent(new Command('messenger:consume'), $parentInput, $output, Command::SUCCESS), ConsoleEvents::TERMINATE);
+        $this->assertFalse($handler->isHandling(RecordFactory::create(Logger::DEBUG)), 'Handler must be closed after main command terminates');
     }
 }

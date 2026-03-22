@@ -95,6 +95,7 @@ class ConsoleHandler extends AbstractProcessingHandler implements EventSubscribe
         OutputInterface::VERBOSITY_DEBUG => Logger::DEBUG,
     ];
     private array $consoleFormatterOptions;
+    private int $nestedCommandDepth = 0;
 
     /**
      * @param OutputInterface|null $output            The console output to use (the handler remains disabled when passing null
@@ -142,6 +143,7 @@ class ConsoleHandler extends AbstractProcessingHandler implements EventSubscribe
      */
     public function close(): void
     {
+        $this->nestedCommandDepth = 0;
         $this->output = null;
 
         parent::close();
@@ -155,6 +157,10 @@ class ConsoleHandler extends AbstractProcessingHandler implements EventSubscribe
      */
     public function onCommand(ConsoleCommandEvent $event)
     {
+        if (1 !== ++$this->nestedCommandDepth) {
+            return;
+        }
+
         $output = $event->getOutput();
         if ($output instanceof ConsoleOutputInterface) {
             $output = $output->getErrorOutput();
@@ -170,7 +176,9 @@ class ConsoleHandler extends AbstractProcessingHandler implements EventSubscribe
      */
     public function onTerminate(ConsoleTerminateEvent $event)
     {
-        $this->close();
+        if ($this->nestedCommandDepth && !--$this->nestedCommandDepth) {
+            $this->close();
+        }
     }
 
     public static function getSubscribedEvents(): array
