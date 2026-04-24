@@ -41,18 +41,29 @@ abstract class AbstractTokenProcessor
 
     abstract protected function getToken(): ?TokenInterface;
 
+    private bool $processing = false;
+
     private function doInvoke(array|LogRecord $record): array|LogRecord
     {
-        $record['extra'][$this->getKey()] = null;
+        if ($this->processing) {
+            return $record;
+        }
 
-        if (null !== $token = $this->getToken()) {
-            $record['extra'][$this->getKey()] = [
-                'authenticated' => (bool) $token->getUser(),
-                'roles' => $token->getRoleNames(),
-            ];
+        $this->processing = true;
+        try {
+            $record['extra'][$this->getKey()] = null;
 
-            // @deprecated since Symfony 5.3, change to $token->getUserIdentifier() in 7.0
-            $record['extra'][$this->getKey()]['user_identifier'] = method_exists($token, 'getUserIdentifier') ? $token->getUserIdentifier() : $token->getUsername();
+            if (null !== $token = $this->getToken()) {
+                $record['extra'][$this->getKey()] = [
+                    'authenticated' => (bool) $token->getUser(),
+                    'roles' => $token->getRoleNames(),
+                ];
+
+                // @deprecated since Symfony 5.3, change to $token->getUserIdentifier() in 7.0
+                $record['extra'][$this->getKey()]['user_identifier'] = method_exists($token, 'getUserIdentifier') ? $token->getUserIdentifier() : $token->getUsername();
+            }
+        } finally {
+            $this->processing = false;
         }
 
         return $record;
