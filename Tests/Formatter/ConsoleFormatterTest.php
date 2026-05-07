@@ -14,6 +14,7 @@ namespace Symfony\Bridge\Monolog\Tests\Formatter;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
+use Symfony\Component\VarDumper\Cloner\VarCloner;
 
 class ConsoleFormatterTest extends TestCase
 {
@@ -59,5 +60,23 @@ class ConsoleFormatterTest extends TestCase
                 'expectedMessage' => "2019-01-01T00:42:00+00:00 <fg=cyan>WARNING  </> <comment>[test]</> test\n",
             ],
         ];
+    }
+
+    public function testPlaceholderInMessageWithDataContext()
+    {
+        $context = (new VarCloner())->cloneVar(['user' => 'alice']);
+        $formatter = new ConsoleFormatter(['colors' => false]);
+
+        $output = $formatter->format([
+            'message' => 'Hello {user}',
+            'context' => $context,
+            'level' => Logger::WARNING,
+            'level_name' => Logger::getLevelName(Logger::WARNING),
+            'channel' => 'test',
+            'datetime' => '2019-01-01T00:42:00+00:00',
+            'extra' => [],
+        ]);
+
+        self::assertStringContainsString('Hello <comment>alice</>', $output);
     }
 }
