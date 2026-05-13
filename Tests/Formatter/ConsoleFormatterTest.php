@@ -16,6 +16,7 @@ use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Monolog\Formatter\ConsoleFormatter;
 use Symfony\Bridge\Monolog\Tests\RecordFactory;
+use Symfony\Component\VarDumper\Cloner\VarCloner;
 
 class ConsoleFormatterTest extends TestCase
 {
@@ -58,5 +59,32 @@ class ConsoleFormatterTest extends TestCase
         }
 
         return $tests;
+    }
+
+    public function testPlaceholderInMessageWithDataContext()
+    {
+        $formatter = new ConsoleFormatter(['colors' => false]);
+
+        // LogRecord::$context must be an array, so the Data object is nested inside it
+        $record = RecordFactory::create(message: 'Hello {user}', context: ['user' => (new VarCloner())->cloneVar('alice')]);
+
+        self::assertStringContainsString('Hello <comment>alice</>', $formatter->format($record));
+
+        if (Logger::API < 3) {
+            $context = (new VarCloner())->cloneVar(['user' => 'alice']);
+            $formatter = new ConsoleFormatter(['colors' => false]);
+
+            $output = $formatter->format([
+                'message' => 'Hello {user}',
+                'context' => $context,
+                'level' => Logger::WARNING,
+                'level_name' => Logger::getLevelName(Logger::WARNING),
+                'channel' => 'test',
+                'datetime' => '2019-01-01T00:42:00+00:00',
+                'extra' => [],
+            ]);
+
+            self::assertStringContainsString('Hello <comment>alice</>', $output);
+        }
     }
 }
