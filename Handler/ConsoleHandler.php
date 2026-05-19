@@ -97,9 +97,13 @@ final class ConsoleHandler extends AbstractProcessingHandler implements EventSub
 
     public function handle(LogRecord $record): bool
     {
-        // we have to update the logging level each time because the verbosity of the
-        // console output might have changed in the meantime (it is not immutable)
-        return $this->updateLevel() && parent::handle($record);
+        if (!$this->isHandling($record)) {
+            return false;
+        }
+
+        parent::handle($record);
+
+        return !$this->getBubble();
     }
 
     public function setInput(InputInterface $input): void

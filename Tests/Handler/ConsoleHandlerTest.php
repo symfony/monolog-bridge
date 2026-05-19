@@ -11,6 +11,7 @@
 
 namespace Symfony\Bridge\Monolog\Tests\Handler;
 
+use Monolog\Handler\TestHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -252,6 +253,46 @@ class ConsoleHandlerTest extends TestCase
         $handler->setOutput($output);
         self::assertFalse($handler->isHandling($message), '->isHandling returns false when input is not interactive');
         self::assertTrue($handler->getBubble(), '->getBubble returns true when input is not interactive and interactiveOnly is true');
+    }
+
+    public function testInteractiveOnlyPreventsPropagationWhenInteractive()
+    {
+        $interactiveInput = $this->createStub(InputInterface::class);
+        $interactiveInput->method('isInteractive')->willReturn(true);
+
+        $consoleHandler = new ConsoleHandler(null, true, [], [], true);
+        $consoleHandler->setInput($interactiveInput);
+        $consoleHandler->setOutput(new BufferedOutput(OutputInterface::VERBOSITY_VERBOSE));
+
+        $sibling = new TestHandler();
+        $logger = new Logger('test', [$consoleHandler, $sibling]);
+
+        $logger->warning('hello');
+
+        self::assertFalse(
+            $sibling->hasWarningRecords(),
+            'sibling handler must not receive records when interactive_only is true and input is interactive',
+        );
+    }
+
+    public function testInteractiveOnlyAllowsPropagationWhenNotInteractive()
+    {
+        $nonInteractiveInput = $this->createStub(InputInterface::class);
+        $nonInteractiveInput->method('isInteractive')->willReturn(false);
+
+        $consoleHandler = new ConsoleHandler(null, true, [], [], true);
+        $consoleHandler->setInput($nonInteractiveInput);
+        $consoleHandler->setOutput(new BufferedOutput(OutputInterface::VERBOSITY_VERBOSE));
+
+        $sibling = new TestHandler();
+        $logger = new Logger('test', [$consoleHandler, $sibling]);
+
+        $logger->warning('hello');
+
+        self::assertTrue(
+            $sibling->hasWarningRecords(),
+            'sibling handler must still receive records when interactive_only is true but input is not interactive',
+        );
     }
 
     public function testNestedCommandsDoNotCloseHandler()
